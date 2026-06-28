@@ -1,0 +1,166 @@
+{
+  "name": "vscode-to-explorer",
+  "displayName": "to-explorer",
+  "version": "0.1.0",
+  "description": "Open files in their OS default application from the Explorer, run scripts, and open links in a chosen browser profile, powered by to-explorer.",
+  "author": "John Haugabook",
+  "license": "MIT",
+  "repository": {
+   "type": "git",
+   "url": "https://github.com/jhauga/vscode-to-explorer.git"
+  },
+  "bugs": {
+   "url": "https://github.com/jhauga/vscode-to-explorer/issues"
+  },
+  "homepage": "https://github.com/jhauga/vscode-to-explorer",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "open",
+    "explorer",
+    "default-application",
+    "external",
+    "shell"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-to-explorer.openExternally",
+        "title": "Open in Default Application",
+        "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.executeScript",
+        "title": "Execute Script",
+        "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.openUrlWithProfile",
+        "title": "Open URL in Browser Profile",
+        "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.toggleOpenAllFilesExternally",
+        "title": "Toggle: Open All Files Externally",
+        "category": "to-explorer"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "vscode-to-explorer.openExternally",
+          "when": "false"
+        },
+        {
+          "command": "vscode-to-explorer.executeScript",
+          "when": "false"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "vscode-to-explorer.openExternally",
+          "when": "resourceScheme == 'file' && !explorerResourceIsFolder",
+          "group": "navigation@30"
+        },
+        {
+          "command": "vscode-to-explorer.executeScript",
+          "when": "config.vscode-to-explorer.executeScript.enabled && resourceScheme == 'file' && resourceExtname =~ /\\.(bat|cmd|ps1|sh|bash|zsh|ksh|fish|command|py|pl|rb)$/i",
+          "group": "navigation@31"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "vscode-to-explorer.openExternally",
+          "when": "resourceScheme == 'file'",
+          "group": "1_open"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "to-explorer",
+      "properties": {
+        "vscode-to-explorer.openAllFilesExternally": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Open **every** file double-clicked in the Explorer in its OS default application. When off, only the file types in `#vscode-to-explorer.fileExtensions#` open externally and code keeps opening in the editor."
+        },
+        "vscode-to-explorer.fileExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "ai", "ait", "psd", "psdt", "psb", "indd", "indt", "idml", "aep", "aepx", "prproj", "prel", "xd", "fla",
+            "mov", "mp4", "mkv", "avi", "wmv", "webm", "m4v", "flv", "mpg", "mpeg", "drp", "kdenlive",
+            "wav", "mp3", "flac", "aac", "ogg", "m4a", "wma", "aiff", "aup3", "aup", "ardour",
+            "sla", "scd",
+            "xcf", "kra", "pdn", "cpt", "tif", "tiff", "bmp", "tga", "dds", "exr", "hdr", "heic", "heif", "svgz",
+            "cr2", "cr3", "nef", "arw", "dng", "orf", "raf", "rw2",
+            "blend", "blend1", "c4d", "hip", "hiplc", "hipnc", "nk", "mogrt",
+            "uasset", "umap", "unitypackage",
+            "sldprt", "sldasm", "catpart", "catproduct", "ipt", "iam", "prt", "asm", "f3d", "dwg", "dxf", "dwf",
+            "glb", "gltf", "fbx", "obj", "3mf", "jt", "iges", "igs", "stl", "step", "stp", "3dm",
+            "x_t", "x_b", "sat", "skp", "rvt", "rfa", "dgn", "par", "psm", "model", "neu", "dae", "ply", "wrl", "vrml",
+            "usd", "usda", "usdc", "usdz", "abc", "3ds",
+            "doc", "docx", "dot", "dotx", "dotm", "ppt", "pptx", "pps", "ppsx", "potx", "potm",
+            "xls", "xlsx", "xlsm", "xltx", "xltm", "pub", "vsd", "vsdx", "vsdm", "mpp", "accdb", "mdb", "one",
+            "odt", "ods", "odp", "odg", "rtf"
+          ],
+          "markdownDescription": "File extensions (without a leading dot) that open in their OS default application when double-clicked. Has no effect when `#vscode-to-explorer.openAllFilesExternally#` is on."
+        },
+        "vscode-to-explorer.executeScript.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show an \"Execute Script\" entry in the Explorer context menu for executable script files."
+        },
+        "vscode-to-explorer.executeScript.confirmBeforeExecute": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a confirmation dialog before running a script."
+        },
+        "vscode-to-explorer.scriptExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "bat", "cmd", "ps1", "sh", "bash", "zsh", "ksh", "fish", "command", "py", "pl", "rb"
+          ],
+          "markdownDescription": "Script extensions (without a leading dot) accepted by the \"Execute Script\" command."
+        },
+        "vscode-to-explorer.browser.command": {
+          "type": "string",
+          "default": "chrome",
+          "description": "Browser command used when opening URLs in a profile (for example \"chrome\")."
+        },
+        "vscode-to-explorer.browser.profile": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Browser profile used when opening URLs. Examples: `Default`, `Profile 1`, or just `2`. Leave empty to open without selecting a profile."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "typecheck": "tsc --noEmit -p ./"
+  },
+  "dependencies": {
+    "to-explorer": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.5.0"
+  }
+}
