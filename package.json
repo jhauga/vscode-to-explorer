@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "description": "Open files in their OS default application from the Explorer, run scripts, and open links in a chosen browser profile, powered by to-explorer.",
   "author": "John Haugabook",
+  "publisher": "jhauga",
+  "icon": "icon.png",
   "license": "MIT",
   "repository": {
    "type": "git",
@@ -150,10 +152,14 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "build": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "typecheck": "tsc --noEmit -p ./"
+    "typecheck": "tsc --noEmit -p ./",
+    "pretest": "tsc -p ./",
+    "test": "node --test \"out/test/**/*.test.js\"",
+    "pre:deploy": "vsce package",
+    "deploy": "vsce publish"
   },
   "dependencies": {
     "to-explorer": "^1.0.0"

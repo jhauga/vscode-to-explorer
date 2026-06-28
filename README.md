@@ -92,6 +92,18 @@ npm run compile
 Press `F5` in VS Code to launch an Extension Development Host with the extension
 loaded.
 
+## Manual Installation
+
+```bash
+npm install
+npm run compile
+npm run pre:deploy
+```
+
+Press `Ctrl + Shift + X`, then click the top right "Views and More Actions"
+icon and select "Install from VSIX..." at the bottom to manually install the
+extension in VS Code.
+
 ## License
 
 [MIT](LICENSE)
