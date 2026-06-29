@@ -1,7 +1,7 @@
 {
   "name": "vscode-to-explorer",
   "displayName": "to-explorer",
-  "version": "0.0.0-alpha",
+  "version": "0.1.0-alpha",
   "description": "Open files in their OS default application from the Explorer, run scripts, and open links in a chosen browser profile, powered by to-explorer.",
   "author": "John Haugabook",
   "publisher": "jhauga",
@@ -53,6 +53,16 @@
         "command": "vscode-to-explorer.toggleOpenAllFilesExternally",
         "title": "Toggle: Open All Files Externally",
         "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.runQuickScript",
+        "title": "Run Quick Script",
+        "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.addQuickScript",
+        "title": "Add Quick Script",
+        "category": "to-explorer"
       }
     ],
     "menus": {
@@ -76,6 +86,18 @@
           "command": "vscode-to-explorer.executeScript",
           "when": "config.vscode-to-explorer.executeScript.enabled && resourceScheme == 'file' && resourceExtname =~ /\\.(bat|cmd|ps1|sh|bash|zsh|ksh|fish|command|py|pl|rb)$/i",
           "group": "navigation@31"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "vscode-to-explorer.runQuickScript",
+          "when": "editorTextFocus",
+          "group": "to-explorer@1"
+        },
+        {
+          "command": "vscode-to-explorer.addQuickScript",
+          "when": "editorTextFocus",
+          "group": "to-explorer@2"
         }
       ],
       "editor/title/context": [

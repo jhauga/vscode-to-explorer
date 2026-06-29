@@ -9,6 +9,7 @@ import { CONFIG_SECTION, getConfig } from "./config.js";
 import { registerInterceptor } from "./interceptor.js";
 import { registerExecuteScript } from "./execute.js";
 import { registerLinkOpener } from "./links.js";
+import { registerQuickScripts } from "./quickScriptCommands.js";
 import { firstError, openExternally } from "./toExplorer.js";
 
 async function openExternallyCommand(arg?: unknown): Promise<void> {
@@ -52,6 +53,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerInterceptor(context);
   registerExecuteScript(context);
   registerLinkOpener(context);
+  registerQuickScripts(context);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(

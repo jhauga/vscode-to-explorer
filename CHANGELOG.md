@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-alpha] - 2026-06-29
+
+### Added
+
+- **Add Quick Script** command and editor context-menu entry that opens a form
+  to configure and save a reusable Quick Script (a raw script or a find/replace
+  preset). Raw scripts are statically checked before they are saved.
+- **Run Quick Script** command and editor context-menu entry that lists saved
+  Quick Scripts and runs the chosen one. Raw scripts run after confirmation;
+  find/replace presets apply to the active editor, opening the Find/Replace
+  widget pre-filled when **Replace All** is off.
+
 ## [0.0.0-alpha] - 2026-06-28
 
 ### Added
