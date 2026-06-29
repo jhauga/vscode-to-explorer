@@ -22,6 +22,7 @@ import {
   type QuickScript,
   type RawQuickScript,
   saveQuickScript,
+  updateQuickScript,
 } from "./quickScripts.js";
 import { firstError, runScript } from "./toExplorer.js";
 
@@ -130,7 +131,29 @@ async function runQuickScriptEntry(script: QuickScript): Promise<void> {
   }
 }
 
-/** Register the run and add Quick Script commands. */
+/** Prompt the user to choose one of the saved Quick Scripts. */
+async function pickQuickScript(
+  context: vscode.ExtensionContext,
+  title: string,
+  placeHolder: string,
+): Promise<QuickScript | undefined> {
+  const scripts = loadQuickScripts(context);
+  if (scripts.length === 0) {
+    void vscode.window.showInformationMessage("No Quick Scripts have been saved yet.");
+    return undefined;
+  }
+  const picked = await vscode.window.showQuickPick(
+    scripts.map((script) => ({
+      label: script.name,
+      description: describeQuickScript(script),
+      script,
+    })),
+    { title, placeHolder },
+  );
+  return picked?.script;
+}
+
+/** Register the run, add, and edit Quick Script commands. */
 export function registerQuickScripts(context: vscode.ExtensionContext): void {
   const addQuickScript = async (): Promise<void> => {
     const config = getConfig();
@@ -139,6 +162,21 @@ export function registerQuickScripts(context: vscode.ExtensionContext): void {
     if (!script) return;
     await saveQuickScript(context, script);
     void vscode.window.showInformationMessage(`Saved Quick Script "${script.name}".`);
+  };
+
+  const editQuickScript = async (): Promise<void> => {
+    const existing = await pickQuickScript(
+      context,
+      "Edit to-explorer Quick Script",
+      "Select a Quick Script to edit",
+    );
+    if (!existing) return;
+    const config = getConfig();
+    const languages = [...config.scriptExtensions];
+    const script = await showQuickScriptForm(languages, existing);
+    if (!script) return;
+    await updateQuickScript(context, script);
+    void vscode.window.showInformationMessage(`Updated Quick Script "${script.name}".`);
   };
 
   const runQuickScript = async (): Promise<void> => {
@@ -169,6 +207,7 @@ export function registerQuickScripts(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-to-explorer.runQuickScript", runQuickScript),
     vscode.commands.registerCommand("vscode-to-explorer.addQuickScript", addQuickScript),
+    vscode.commands.registerCommand("vscode-to-explorer.editQuickScript", editQuickScript),
     { dispose: () => output?.dispose() },
   );
 }

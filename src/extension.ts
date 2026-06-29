@@ -6,10 +6,14 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { CONFIG_SECTION, getConfig } from "./config.js";
+import { registerConfigView } from "./configView.js";
+import { registerFileExtensionsEditor } from "./fileExtensionsEditor.js";
 import { registerInterceptor } from "./interceptor.js";
 import { registerExecuteScript } from "./execute.js";
 import { registerLinkOpener } from "./links.js";
+import { registerProfileLinks } from "./profileLinks.js";
 import { registerQuickScripts } from "./quickScriptCommands.js";
+import { registerStatusBar } from "./statusBar.js";
 import { firstError, openExternally } from "./toExplorer.js";
 
 async function openExternallyCommand(arg?: unknown): Promise<void> {
@@ -49,11 +53,16 @@ async function toggleOpenAllFilesExternally(): Promise<void> {
   );
 }
 
-export function activate(context: vscode.ExtensionContext): void {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function activate(context: vscode.ExtensionContext): { extendMarkdownIt(md: any): any } {
   registerInterceptor(context);
   registerExecuteScript(context);
   registerLinkOpener(context);
   registerQuickScripts(context);
+  registerConfigView(context);
+  registerFileExtensionsEditor(context);
+  registerStatusBar(context);
+  const extendMarkdownIt = registerProfileLinks(context);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -65,6 +74,10 @@ export function activate(context: vscode.ExtensionContext): void {
       toggleOpenAllFilesExternally,
     ),
   );
+
+  // Exposed so VS Code's Markdown preview applies the link-rewriting plugin
+  // (declared via the `markdown.markdownItPlugins` contribution).
+  return { extendMarkdownIt };
 }
 
 export function deactivate(): void {

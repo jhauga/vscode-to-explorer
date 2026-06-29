@@ -33,6 +33,25 @@
     "onStartupFinished"
   ],
   "contributes": {
+    "markdown.markdownItPlugins": true,
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vscode-to-explorer",
+          "title": "to-explorer",
+          "icon": "resources/vscode-to-explorer.svg"
+        }
+      ]
+    },
+    "views": {
+      "vscode-to-explorer": [
+        {
+          "id": "vscode-to-explorer.configView",
+          "name": "Configuration",
+          "type": "webview"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "vscode-to-explorer.openExternally",
@@ -62,6 +81,16 @@
       {
         "command": "vscode-to-explorer.addQuickScript",
         "title": "Add Quick Script",
+        "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.editQuickScript",
+        "title": "Edit Quick Scripts",
+        "category": "to-explorer"
+      },
+      {
+        "command": "vscode-to-explorer.editFileExtensions",
+        "title": "Edit File Extensions",
         "category": "to-explorer"
       }
     ],
@@ -98,6 +127,11 @@
           "command": "vscode-to-explorer.addQuickScript",
           "when": "editorTextFocus",
           "group": "to-explorer@2"
+        },
+        {
+          "command": "vscode-to-explorer.editQuickScript",
+          "when": "editorTextFocus",
+          "group": "to-explorer@3"
         }
       ],
       "editor/title/context": [
@@ -140,6 +174,16 @@
           ],
           "markdownDescription": "File extensions (without a leading dot) that open in their OS default application when double-clicked. Has no effect when `#vscode-to-explorer.openAllFilesExternally#` is on."
         },
+        "vscode-to-explorer.openExternally.promptForScripts": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "When opening files externally, ask what to do with a double-clicked script instead of letting the OS run it. When on, a dialog offers **Execute**, **Open in VS Code**, or **Cancel**. When off, scripts open in the editor. Requires `#vscode-to-explorer.executeScript.enabled#` to offer **Execute**."
+        },
+        "vscode-to-explorer.openExternally.pickApplicationWhenNoDefault": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "When a file opened externally has no OS default application, show an \"open with\" picker to choose one. When off, the file opens in the editor as usual. Reliable on Windows; on macOS and Linux files are assumed to have a default application."
+        },
         "vscode-to-explorer.executeScript.enabled": {
           "type": "boolean",
           "default": true,
@@ -165,6 +209,16 @@
           "default": "chrome",
           "description": "Browser command used when opening URLs in a profile (for example \"chrome\")."
         },
+        "vscode-to-explorer.browser.useLastProfile": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Open URLs in the browser's last-used profile instead of a specific one. When on, `#vscode-to-explorer.browser.profile#` is ignored."
+        },
+        "vscode-to-explorer.browser.openLinksInProfile": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Route clicked `http`/`https` links through the configured browser and profile. Applies to links in Markdown, HTML, and plain-text files (Ctrl+Click) and to links in the rendered Markdown preview. When off, links open in the OS default browser as usual."
+        },
         "vscode-to-explorer.browser.profile": {
           "type": "string",
           "default": "",
@@ -180,7 +234,7 @@
     "typecheck": "tsc --noEmit -p ./",
     "pretest": "tsc -p ./",
     "test": "node --test \"out/test/**/*.test.js\"",
-    "pre:deploy": "vsce package",
+    "pre:deploy": "npm run compile && vsce package",
     "deploy": "vsce publish"
   },
   "dependencies": {

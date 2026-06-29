@@ -93,6 +93,21 @@ export async function saveQuickScript(
   await context.globalState.update(QUICK_SCRIPTS_KEY, scripts);
 }
 
+/** Replace the persisted Quick Script that shares an id, or append if new. */
+export async function updateQuickScript(
+  context: vscode.ExtensionContext,
+  script: QuickScript,
+): Promise<void> {
+  const scripts = loadQuickScripts(context);
+  const index = scripts.findIndex((existing) => existing.id === script.id);
+  if (index === -1) {
+    scripts.push(script);
+  } else {
+    scripts[index] = script;
+  }
+  await context.globalState.update(QUICK_SCRIPTS_KEY, scripts);
+}
+
 /** Escape a literal string for safe embedding in a regular expression. */
 export function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

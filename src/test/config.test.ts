@@ -12,6 +12,7 @@ import {
   type ExtensionConfig,
   extensionOf,
   isScriptFile,
+  normalizeExtensionList,
   shouldOpenExternally,
 } from "../config.js";
 import { DEFAULT_FILE_EXTENSIONS, DEFAULT_SCRIPT_EXTENSIONS } from "../defaults.js";
@@ -24,7 +25,11 @@ function makeConfig(overrides: Partial<ExtensionConfig> = {}): ExtensionConfig {
     executeScriptEnabled: true,
     confirmBeforeExecute: true,
     scriptExtensions: new Set(DEFAULT_SCRIPT_EXTENSIONS),
+    promptForScripts: false,
+    pickApplicationWhenNoDefault: false,
     browserCommand: "chrome",
+    browserUseLastProfile: false,
+    browserOpenLinksInProfile: false,
     browserProfile: "",
     ...overrides,
   };
@@ -66,6 +71,28 @@ describe("shouldOpenExternally", () => {
     const all = makeConfig({ openAllFilesExternally: true });
     assert.equal(shouldOpenExternally(fakeUri("C:\\src\\extension.ts"), all), true);
     assert.equal(shouldOpenExternally(fakeUri("C:\\src\\extension.ts", "git"), all), false);
+  });
+});
+
+describe("normalizeExtensionList", () => {
+  test("strips dots, lowercases, and trims", () => {
+    assert.deepEqual(normalizeExtensionList([".PSD", " Stl ", "OBJ"]), ["psd", "stl", "obj"]);
+  });
+
+  test("splits comma/space-separated groups into separate extensions", () => {
+    assert.deepEqual(normalizeExtensionList(["stl, obj fbx"]), ["stl", "obj", "fbx"]);
+  });
+
+  test("drops blanks and removes duplicates, preserving first-seen order", () => {
+    assert.deepEqual(normalizeExtensionList(["stl", "", "STL", "obj", ".stl"]), ["stl", "obj"]);
+  });
+
+  test("keeps valid multi-part tokens but rejects ones with separators", () => {
+    assert.deepEqual(normalizeExtensionList(["x_t", "3ds", "blend1", "a/b", "c\\d"]), [
+      "x_t",
+      "3ds",
+      "blend1",
+    ]);
   });
 });
 

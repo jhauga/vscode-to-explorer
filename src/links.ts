@@ -19,13 +19,16 @@ function selectionUrl(): string | undefined {
 
 async function openUrlWithProfile(arg?: unknown): Promise<void> {
   const config = getConfig();
+  // When opting into the last-used profile, pass no selector so the browser
+  // opens with whatever profile it used last instead of a configured one.
+  const profile = config.browserUseLastProfile ? "" : config.browserProfile;
 
   let url = typeof arg === "string" ? arg : undefined;
   if (!url) {
     url = await vscode.window.showInputBox({
       title: "Open URL in browser profile",
-      prompt: config.browserProfile
-        ? `Opens in ${config.browserCommand} (${config.browserProfile})`
+      prompt: profile
+        ? `Opens in ${config.browserCommand} (${profile})`
         : `Opens in ${config.browserCommand}`,
       value: selectionUrl() ?? "https://example.com",
       validateInput: (value) =>
@@ -37,7 +40,7 @@ async function openUrlWithProfile(arg?: unknown): Promise<void> {
   if (!target) return;
 
   try {
-    const result = await openUrl(target, config.browserCommand, config.browserProfile);
+    const result = await openUrl(target, config.browserCommand, profile);
     if (!result.ok) {
       const detail = firstError(result) ?? "the browser could not be launched";
       void vscode.window.showErrorMessage(`Could not open URL: ${detail}`);

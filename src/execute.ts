@@ -17,6 +17,36 @@ function channel(): vscode.OutputChannel {
   return output;
 }
 
+/**
+ * Run a script and stream its result to the output channel. Assumes the caller
+ * has already obtained consent (the command confirms; the interceptor prompts),
+ * so it performs no confirmation of its own.
+ */
+export async function runScriptAndReport(uri: vscode.Uri): Promise<void> {
+  const name = path.basename(uri.fsPath);
+  const log = channel();
+  log.show(true);
+  log.appendLine(`> Executing ${uri.fsPath}`);
+
+  try {
+    const result = await runScript(uri.fsPath);
+    for (const action of result.actions) {
+      if (action.detail) log.appendLine(action.detail);
+    }
+    if (result.ok) {
+      log.appendLine(`> ${name} finished.`);
+    } else {
+      const detail = firstError(result) ?? "the script reported a failure";
+      log.appendLine(`> ${name} failed: ${detail}`);
+      void vscode.window.showErrorMessage(`${name} failed: ${detail}`);
+    }
+  } catch (err) {
+    const message = (err as Error).message;
+    log.appendLine(`> ${name} failed: ${message}`);
+    void vscode.window.showErrorMessage(`Failed to execute ${name}: ${message}`);
+  }
+}
+
 /** Resolve the URI the command should act on (menu arg or active editor). */
 function resolveTarget(arg: unknown): vscode.Uri | undefined {
   if (arg instanceof vscode.Uri) return arg;
@@ -52,27 +82,7 @@ async function executeScript(arg: unknown): Promise<void> {
     if (choice !== "Execute Script") return;
   }
 
-  const log = channel();
-  log.show(true);
-  log.appendLine(`> Executing ${uri.fsPath}`);
-
-  try {
-    const result = await runScript(uri.fsPath);
-    for (const action of result.actions) {
-      if (action.detail) log.appendLine(action.detail);
-    }
-    if (result.ok) {
-      log.appendLine(`> ${name} finished.`);
-    } else {
-      const detail = firstError(result) ?? "the script reported a failure";
-      log.appendLine(`> ${name} failed: ${detail}`);
-      void vscode.window.showErrorMessage(`${name} failed: ${detail}`);
-    }
-  } catch (err) {
-    const message = (err as Error).message;
-    log.appendLine(`> ${name} failed: ${message}`);
-    void vscode.window.showErrorMessage(`Failed to execute ${name}: ${message}`);
-  }
+  await runScriptAndReport(uri);
 }
 
 /** Register the execute-script command. */

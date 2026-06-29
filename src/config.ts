@@ -21,8 +21,24 @@ export interface ExtensionConfig {
   confirmBeforeExecute: boolean;
   /** Script extensions (no dot, lowercase) the execute command accepts. */
   scriptExtensions: Set<string>;
+  /**
+   * When opening files externally, prompt to Execute / Open in VS Code / Cancel
+   * for a double-clicked script instead of letting the OS run it. When off,
+   * scripts stay in the editor.
+   */
+  promptForScripts: boolean;
+  /**
+   * When opening a file externally whose extension has no OS default
+   * application, show an "open with" picker. When off, the file stays in the
+   * editor as usual.
+   */
+  pickApplicationWhenNoDefault: boolean;
   /** Logical browser command used when opening URLs (e.g. "chrome"). */
   browserCommand: string;
+  /** Open URLs in the browser's last-used profile, ignoring browserProfile. */
+  browserUseLastProfile: boolean;
+  /** Route clicked http(s) links through the configured browser/profile. */
+  browserOpenLinksInProfile: boolean;
   /** Browser profile selector ("", "Default", "Profile 2", "2", ...). */
   browserProfile: string;
 }
@@ -30,6 +46,30 @@ export interface ExtensionConfig {
 /** Strip a leading dot and lowercase an extension token. */
 function normalizeExt(value: string): string {
   return value.trim().replace(/^\.+/, "").toLowerCase();
+}
+
+/** A normalized extension is alphanumeric-led and free of spaces or separators. */
+const VALID_EXT = /^[a-z0-9][a-z0-9._+-]*$/;
+
+/**
+ * Normalize a list of extension tokens for storage: each entry may itself be a
+ * comma/whitespace-separated group, so the input "stl, obj fbx" yields three
+ * extensions. Dots are stripped, values lowercased, blanks and malformed tokens
+ * dropped, and duplicates removed while preserving first-seen order.
+ */
+export function normalizeExtensionList(values: readonly string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const value of values) {
+    for (const token of String(value).split(/[\s,]+/)) {
+      const ext = normalizeExt(token);
+      if (ext && VALID_EXT.test(ext) && !seen.has(ext)) {
+        seen.add(ext);
+        out.push(ext);
+      }
+    }
+  }
+  return out;
 }
 
 function toExtSet(values: readonly string[] | undefined, fallback: string[]): Set<string> {
@@ -51,7 +91,14 @@ export function getConfig(scope?: vscode.Uri): ExtensionConfig {
     executeScriptEnabled: cfg.get<boolean>("executeScript.enabled", true),
     confirmBeforeExecute: cfg.get<boolean>("executeScript.confirmBeforeExecute", true),
     scriptExtensions: toExtSet(cfg.get<string[]>("scriptExtensions"), DEFAULT_SCRIPT_EXTENSIONS),
+    promptForScripts: cfg.get<boolean>("openExternally.promptForScripts", false),
+    pickApplicationWhenNoDefault: cfg.get<boolean>(
+      "openExternally.pickApplicationWhenNoDefault",
+      false,
+    ),
     browserCommand: (cfg.get<string>("browser.command", "chrome") || "chrome").trim(),
+    browserUseLastProfile: cfg.get<boolean>("browser.useLastProfile", false),
+    browserOpenLinksInProfile: cfg.get<boolean>("browser.openLinksInProfile", false),
     browserProfile: cfg.get<string>("browser.profile", "").trim(),
   };
 }

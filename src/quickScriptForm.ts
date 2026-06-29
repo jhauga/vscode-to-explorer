@@ -43,9 +43,14 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** Build a validated Quick Script from a save payload, or report why not. */
+/**
+ * Build a validated Quick Script from a save payload, or report why not. When
+ * editing, `id` carries the existing script's id forward so the saved entry
+ * replaces the original instead of creating a duplicate.
+ */
 function buildScript(
   payload: SavePayload,
+  id: string,
 ): { script: QuickScript } | { error: string } {
   const name = payload.name.trim();
   if (name === "") return { error: "A name is required." };
@@ -56,7 +61,7 @@ function buildScript(
     const check = validateRawScript(payload.content);
     if (!check.ok) return { error: check.reason ?? "The script is not valid." };
     const script: RawQuickScript = {
-      id: crypto.randomUUID(),
+      id,
       kind: "raw",
       name,
       language,
@@ -73,7 +78,7 @@ function buildScript(
   });
   if (!check.ok) return { error: check.reason ?? "The find/replace preset is not valid." };
   const script: FindReplaceQuickScript = {
-    id: crypto.randomUUID(),
+    id,
     kind: "findReplace",
     name,
     find: payload.find,
@@ -85,11 +90,70 @@ function buildScript(
   return { script };
 }
 
-/** Render the form HTML, seeding the language list and find/replace defaults. */
-function renderHtml(webview: vscode.Webview, nonce: string, languages: string[]): string {
-  const options = languages
-    .map((lang) => `<option value="${escapeHtml(lang)}">.${escapeHtml(lang)}</option>`)
+/** Form field values used to seed the webview, whether adding or editing. */
+interface FormInitial {
+  name: string;
+  kind: "raw" | "findReplace";
+  language: string;
+  content: string;
+  find: string;
+  replace: string;
+  regex: boolean;
+  caseSensitive: boolean;
+  replaceAll: boolean;
+}
+
+/** Seed the form from an existing script when editing, or with add defaults. */
+function toInitial(existing: QuickScript | undefined): FormInitial {
+  const defaults: FormInitial = {
+    name: "",
+    kind: "findReplace",
+    language: "",
+    content: "",
+    find: " {1,}$",
+    replace: "",
+    regex: true,
+    caseSensitive: false,
+    replaceAll: true,
+  };
+  if (!existing) return defaults;
+  if (existing.kind === "raw") {
+    return { ...defaults, name: existing.name, kind: "raw", language: existing.language, content: existing.content };
+  }
+  return {
+    ...defaults,
+    name: existing.name,
+    kind: "findReplace",
+    find: existing.find,
+    replace: existing.replace,
+    regex: existing.regex,
+    caseSensitive: existing.caseSensitive,
+    replaceAll: existing.replaceAll,
+  };
+}
+
+/** Render the form HTML, seeding the language list and field values. */
+function renderHtml(
+  webview: vscode.Webview,
+  nonce: string,
+  languages: string[],
+  initial: FormInitial,
+  heading: string,
+  saveLabel: string,
+): string {
+  // Ensure the seeded language appears and is selectable, even if it is not in
+  // the current configured list (for example after the list was edited).
+  const langList = initial.language && !languages.includes(initial.language)
+    ? [initial.language, ...languages]
+    : languages;
+  const options = langList
+    .map(
+      (lang) =>
+        `<option value="${escapeHtml(lang)}"${lang === initial.language ? " selected" : ""}>.${escapeHtml(lang)}</option>`,
+    )
     .join("");
+  const sel = (kind: "raw" | "findReplace"): string => (initial.kind === kind ? " selected" : "");
+  const chk = (on: boolean): string => (on ? " checked" : "");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -171,16 +235,16 @@ function renderHtml(webview: vscode.Webview, nonce: string, languages: string[])
   </style>
 </head>
 <body>
-  <h1>Add a to-explorer Quick Script</h1>
+  <h1>${escapeHtml(heading)}</h1>
   <p class="lead">Save a reusable action you can run later with <strong>Run Quick Script</strong>.</p>
 
   <label for="name">Name</label>
-  <input type="text" id="name" placeholder="Trim trailing spaces" autofocus />
+  <input type="text" id="name" placeholder="Trim trailing spaces" value="${escapeHtml(initial.name)}" autofocus />
 
   <label for="kind">Type</label>
   <select id="kind">
-    <option value="findReplace">Find / Replace (preset)</option>
-    <option value="raw">Raw script</option>
+    <option value="findReplace"${sel("findReplace")}>Find / Replace (preset)</option>
+    <option value="raw"${sel("raw")}>Raw script</option>
   </select>
 
   <fieldset id="findReplaceSection">
@@ -188,16 +252,16 @@ function renderHtml(webview: vscode.Webview, nonce: string, languages: string[])
     <div class="row">
       <div>
         <label for="find">Find <span class="hint">(required)</span></label>
-        <input type="text" id="find" value=" {1,}$" />
+        <input type="text" id="find" value="${escapeHtml(initial.find)}" />
       </div>
       <div>
         <label for="replace">Replace</label>
-        <input type="text" id="replace" value="" />
+        <input type="text" id="replace" value="${escapeHtml(initial.replace)}" />
       </div>
     </div>
-    <div class="check"><input type="checkbox" id="regex" checked /><label for="regex">Regular Expression</label></div>
-    <div class="check"><input type="checkbox" id="caseSensitive" /><label for="caseSensitive">Case sensitive</label></div>
-    <div class="check"><input type="checkbox" id="replaceAll" checked /><label for="replaceAll">Replace All</label></div>
+    <div class="check"><input type="checkbox" id="regex"${chk(initial.regex)} /><label for="regex">Regular Expression</label></div>
+    <div class="check"><input type="checkbox" id="caseSensitive"${chk(initial.caseSensitive)} /><label for="caseSensitive">Case sensitive</label></div>
+    <div class="check"><input type="checkbox" id="replaceAll"${chk(initial.replaceAll)} /><label for="replaceAll">Replace All</label></div>
     <p class="hint">When Replace All is off, running this script opens VS Code's Find/Replace widget pre-filled so you can replace matches one at a time.</p>
   </fieldset>
 
@@ -206,14 +270,14 @@ function renderHtml(webview: vscode.Webview, nonce: string, languages: string[])
     <label for="language">Language</label>
     <select id="language">${options}</select>
     <label for="content">Script</label>
-    <textarea id="content" spellcheck="false" placeholder="echo Hello from a Quick Script"></textarea>
+    <textarea id="content" spellcheck="false" placeholder="echo Hello from a Quick Script">${escapeHtml(initial.content)}</textarea>
     <p class="hint">The script is checked before saving and written to a temporary file when run.</p>
   </fieldset>
 
   <div id="error" role="alert"></div>
 
   <div class="actions">
-    <button type="button" class="primary" id="save">Save Quick Script</button>
+    <button type="button" class="primary" id="save">${escapeHtml(saveLabel)}</button>
     <button type="button" class="secondary" id="cancel">Cancel</button>
   </div>
 
@@ -271,18 +335,27 @@ function renderHtml(webview: vscode.Webview, nonce: string, languages: string[])
 /**
  * Open the Quick Script form and resolve with the saved script, or `undefined`
  * if the user cancels or closes the panel. Validation failures keep the form
- * open and surface the reason inline.
+ * open and surface the reason inline. When `existing` is provided the form opens
+ * pre-filled for editing and the saved script keeps the original's id.
  */
-export function showQuickScriptForm(languages: string[]): Promise<QuickScript | undefined> {
+export function showQuickScriptForm(
+  languages: string[],
+  existing?: QuickScript,
+): Promise<QuickScript | undefined> {
+  const editing = existing !== undefined;
+  const id = existing?.id ?? crypto.randomUUID();
+  const heading = editing ? "Edit a to-explorer Quick Script" : "Add a to-explorer Quick Script";
+  const saveLabel = editing ? "Save Changes" : "Save Quick Script";
+
   const panel = vscode.window.createWebviewPanel(
     "vscodeToExplorerQuickScript",
-    "Add to-explorer Quick Script",
+    editing ? "Edit to-explorer Quick Script" : "Add to-explorer Quick Script",
     vscode.ViewColumn.Active,
     { enableScripts: true, retainContextWhenHidden: true },
   );
 
   const nonce = makeNonce();
-  panel.webview.html = renderHtml(panel.webview, nonce, languages);
+  panel.webview.html = renderHtml(panel.webview, nonce, languages, toInitial(existing), heading, saveLabel);
 
   return new Promise<QuickScript | undefined>((resolve) => {
     let settled = false;
@@ -299,7 +372,7 @@ export function showQuickScriptForm(languages: string[]): Promise<QuickScript | 
         return;
       }
       if (message?.type === "save" && message.payload) {
-        const built = buildScript(message.payload);
+        const built = buildScript(message.payload, id);
         if ("error" in built) {
           void vscode.window.showErrorMessage(`Quick Script not saved: ${built.error}`);
           void panel.webview.postMessage({ type: "invalid", reason: built.error });
