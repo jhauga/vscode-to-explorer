@@ -1,7 +1,7 @@
 {
   "name": "vscode-to-explorer",
   "displayName": "to-explorer",
-  "version": "0.1.0",
+  "version": "0.0.0-alpha",
   "description": "Open files in their OS default application from the Explorer, run scripts, and open links in a chosen browser profile, powered by to-explorer.",
   "author": "John Haugabook",
   "publisher": "jhauga",
