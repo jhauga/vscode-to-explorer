@@ -238,7 +238,7 @@
     "deploy": "vsce publish"
   },
   "dependencies": {
-    "to-explorer": "^1.0.0"
+    "to-explorer": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
