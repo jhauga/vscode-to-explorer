@@ -34,7 +34,7 @@ interface RunOptions {
     sourceExtensions?: string[];
     binaryExtensions?: string[];
     allowExec?: boolean;
-    browser?: { command?: string };
+    browser?: { command?: string; args?: string[] };
   };
 }
 

@@ -41,6 +41,19 @@ export interface ExtensionConfig {
   browserOpenLinksInProfile: boolean;
   /** Browser profile selector ("", "Default", "Profile 2", "2", ...). */
   browserProfile: string;
+  /**
+   * Handle Ctrl+Click on links in the integrated terminal. Master switch for
+   * the two terminal options below; when off, VS Code's own terminal link
+   * handling applies unchanged.
+   */
+  terminalEnabled: boolean;
+  /** Open terminal http(s) links in the configured browser and profile. */
+  terminalOpenWebLinks: boolean;
+  /**
+   * Open terminal file paths in their OS default application when the file
+   * would also open externally from the Explorer (scripts excluded).
+   */
+  terminalOpenFiles: boolean;
 }
 
 /** Strip a leading dot and lowercase an extension token. */
@@ -100,6 +113,9 @@ export function getConfig(scope?: vscode.Uri): ExtensionConfig {
     browserUseLastProfile: cfg.get<boolean>("browser.useLastProfile", false),
     browserOpenLinksInProfile: cfg.get<boolean>("browser.openLinksInProfile", false),
     browserProfile: cfg.get<string>("browser.profile", "").trim(),
+    terminalEnabled: cfg.get<boolean>("terminal.enabled", false),
+    terminalOpenWebLinks: cfg.get<boolean>("terminal.openWebLinksInBrowser", true),
+    terminalOpenFiles: cfg.get<boolean>("terminal.openFilesInDefaultApp", false),
   };
 }
 

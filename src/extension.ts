@@ -1,7 +1,8 @@
 /**
- * Extension entry point. Wires together the tab interceptor and the commands
- * for opening files externally, executing scripts, opening URLs in a browser
- * profile, and toggling the open-everything-externally setting.
+ * Extension entry point. Wires together the tab interceptor, the terminal link
+ * provider, and the commands for opening files externally, executing scripts,
+ * opening URLs in a browser profile, and toggling the open-everything-externally
+ * setting.
  */
 import * as path from "node:path";
 import * as vscode from "vscode";
@@ -14,6 +15,7 @@ import { registerLinkOpener } from "./links.js";
 import { registerProfileLinks } from "./profileLinks.js";
 import { registerQuickScripts } from "./quickScriptCommands.js";
 import { registerStatusBar } from "./statusBar.js";
+import { registerTerminalLinks } from "./terminalLinks.js";
 import { firstError, openExternally } from "./toExplorer.js";
 
 async function openExternallyCommand(arg?: unknown): Promise<void> {
@@ -62,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): { extendMarkdownIt(m
   registerConfigView(context);
   registerFileExtensionsEditor(context);
   registerStatusBar(context);
+  registerTerminalLinks(context);
   const extendMarkdownIt = registerProfileLinks(context);
 
   context.subscriptions.push(

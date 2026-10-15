@@ -31,6 +31,9 @@ function makeConfig(overrides: Partial<ExtensionConfig> = {}): ExtensionConfig {
     browserUseLastProfile: false,
     browserOpenLinksInProfile: false,
     browserProfile: "",
+    terminalEnabled: false,
+    terminalOpenWebLinks: true,
+    terminalOpenFiles: false,
     ...overrides,
   };
 }

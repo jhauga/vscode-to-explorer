@@ -19,9 +19,7 @@
  */
 import * as vscode from "vscode";
 import { getConfig } from "./config.js";
-
-/** Matches an http(s) URL; trailing punctuation is trimmed from the match. */
-const URL_RE = /\bhttps?:\/\/[^\s<>()[\]"']+/gi;
+import { findUrls } from "./terminalLinkParsing.js";
 
 /** Document languages whose source links are routed through the profile. */
 const SELECTOR: vscode.DocumentSelector = [
@@ -32,11 +30,6 @@ const SELECTOR: vscode.DocumentSelector = [
 
 /** This extension's id (`publisher.name`), set when the links are registered. */
 let extensionId = "";
-
-/** Strip trailing punctuation unlikely to be part of a URL ("x)." -> "x"). */
-function trimUrl(raw: string): string {
-  return raw.replace(/[.,;:!?]+$/, "");
-}
 
 /** Build the `vscode://<extension id>/open-url?url=...` callback for a URL. */
 function callbackUri(url: string): vscode.Uri {
@@ -61,15 +54,12 @@ class ProfileLinkProvider implements vscode.DocumentLinkProvider {
   provideDocumentLinks(document: vscode.TextDocument): vscode.DocumentLink[] {
     if (!getConfig(document.uri).browserOpenLinksInProfile) return [];
     const links: vscode.DocumentLink[] = [];
-    const text = document.getText();
-    for (const match of text.matchAll(URL_RE)) {
-      const url = trimUrl(match[0]);
-      const start = match.index ?? 0;
+    for (const span of findUrls(document.getText())) {
       const range = new vscode.Range(
-        document.positionAt(start),
-        document.positionAt(start + url.length),
+        document.positionAt(span.start),
+        document.positionAt(span.start + span.length),
       );
-      const link = new vscode.DocumentLink(range, callbackUri(url));
+      const link = new vscode.DocumentLink(range, callbackUri(span.text));
       link.tooltip = "Open in configured browser profile";
       links.push(link);
     }

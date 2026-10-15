@@ -1,8 +1,8 @@
 # to-explorer for VS Code
 
 Open files in their operating-system default application straight from the VS
-Code Explorer, run scripts from the context menu, and open links in a chosen
-browser profile. The extension drives the
+Code Explorer, run scripts from the context menu, and open links from files or
+the integrated terminal in a chosen browser profile. The extension drives the
 [`to-explorer`](https://www.npmjs.com/package/to-explorer) package, which
 launches applications detached so nothing blocks the editor.
 
@@ -23,16 +23,20 @@ launches applications detached so nothing blocks the editor.
   application. Scripts are kept in the editor rather than run, and files with no
   default application open in the editor as usual - opt in to a script prompt or
   an "open with" picker through settings.
-- **Configuration view and status indicator.** A **to-explorer** view in the
-  activity bar provides a simple GUI for the extension's settings, with an
-  **Edit File Extensions** button and shortcut buttons to add, run, and edit
-  Quick Scripts. While **Open All Files Externally** is on, a status bar item
-  appears; click it to turn the setting back off.
+- **Configuration view and status indicator.** A **to-explorer** container in
+  the activity bar provides a simple GUI for the extension's settings in four
+  collapsible sections: **Main Configuration** (file opening and script
+  handling, with a link to the extension's settings), **Browser
+  Configuration**, **Terminal Configuration**, and **Configuration Editor Nav**
+  (the **Edit File Extensions** button and shortcut buttons to add, run, and
+  edit Quick Scripts). Each section remembers whether it is expanded. While
+  **Open All Files Externally** is on, a status bar item appears; click it to
+  turn the setting back off.
 - **Edit the external file types in a panel.** Click **Edit File Extensions** in
-  the activity bar view (or run **to-explorer: Edit File Extensions**) to open an
-  editor where each extension is a removable chip and new ones are added from an
-  input. Save writes the list, Cancel discards it, and Restore Defaults reloads
-  the built-in set.
+  the **Configuration Editor Nav** section (or run **to-explorer: Edit File
+  Extensions**) to open an editor where each extension is a removable chip and
+  new ones are added from an input. Save writes the list, Cancel discards it,
+  and Restore Defaults reloads the built-in set.
 - **Execute scripts from the Explorer.** Right-click an executable script
   (`build.bat`, `deploy.sh`, `setup.ps1`, ...) and choose **Execute Script**.
   A confirmation dialog appears before the script runs, and its output is shown
@@ -43,6 +47,10 @@ launches applications detached so nothing blocks the editor.
   to route clicked `http`/`https` links - in Markdown, HTML, and plain-text files
   (Ctrl+Click) and in the rendered Markdown preview - through that browser and
   profile instead of the OS default browser.
+- **Open terminal links through to-explorer (optional).** Ctrl+Click a URL
+  printed in the integrated terminal to open it in the configured browser and
+  profile, or a file path to open it in its OS default application. It is off
+  by default; see [Terminal links](#terminal-links).
 - **Save and run Quick Scripts.** Right-click in the editor and choose **Add
   Quick Script** to save a reusable action, then **Run Quick Script** to run it.
   A Quick Script is either a raw script (run like a script file) or a
@@ -79,7 +87,8 @@ editor. Right-click in the editor and choose **Add a to-explorer Quick Script**
 configuration form, then use **Run a to-explorer Quick Script** to run one. To
 change a saved script, run **to-explorer: Edit Quick Scripts**, pick it from the
 list, and the form reopens pre-filled with its values. The Quick Script commands
-are also available as buttons in the to-explorer activity bar view.
+are also available as buttons in the **Configuration Editor Nav** section of the
+to-explorer activity bar.
 
 A Quick Script is one of two kinds:
 
@@ -98,6 +107,36 @@ A Quick Script is one of two kinds:
 For example, a preset with **Regular Expression** on, Find `` {1,}$``, and an
 empty Replace trims trailing spaces from every line.
 
+## Terminal links
+
+VS Code already turns URLs and file paths printed in the integrated terminal
+into Ctrl+Click links. Turn on **Enable terminal files / links** in the
+**Terminal Configuration** section (or `vscode-to-explorer.terminal.enabled` in
+settings) and the extension can handle two kinds of those clicks itself:
+
+- **Web links.** With **Open web links in browser** on, a link such as
+  `http://localhost:3000/` printed by a dev server opens in the browser and
+  profile from **Browser Configuration**, the same as **Open URL in Browser
+  Profile**. This does not depend on **Open links in browser profile**, which
+  covers links in files and the Markdown preview.
+- **Files.** With **Open file extensions with default app** on, a path such as
+  `./out/report.docx` opens in its OS default application when the file exists
+  and its type opens externally from the Explorer: it is listed in
+  `vscode-to-explorer.fileExtensions`, or **Open All Files Externally** is on.
+  A click follows the same rules as a double-click in the Explorer. Scripts open
+  in the editor and are never run, and a file whose default application is VS
+  Code, or that has none, opens in the editor (or in the "open with" picker when
+  that setting is on).
+
+Hovering a link the extension handles shows **Open in configured browser
+profile** or **Open in default application**. Every other link keeps VS Code's
+normal behavior, and with the switch off nothing changes.
+
+Relative paths resolve against the terminal's current folder when VS Code
+reports it through shell integration, and otherwise against the folder the
+terminal started in. A path that contains spaces is recognized when it is
+quoted, for example `"C:\Users\<user>\Documents\Q3 report.docx"`.
+
 ## Settings
 
 | Setting | Default | Description |
@@ -113,12 +152,16 @@ empty Replace trims trailing spaces from every line.
 | `vscode-to-explorer.browser.openLinksInProfile` | `false` | Route clicked http(s) links (in files and the Markdown preview) through the configured browser and profile. |
 | `vscode-to-explorer.browser.useLastProfile` | `false` | Open URLs in the browser's last-used profile, ignoring the profile setting below. |
 | `vscode-to-explorer.browser.profile` | `""` | Browser profile, such as `Default`, `Profile 1`, or `2`. Empty opens without a profile. |
+| `vscode-to-explorer.terminal.enabled` | `false` | Handle Ctrl+Click on links in the integrated terminal. Required for the two terminal settings below. |
+| `vscode-to-explorer.terminal.openWebLinksInBrowser` | `true` | Open http(s) links clicked in the terminal in the configured browser and profile. |
+| `vscode-to-explorer.terminal.openFilesInDefaultApp` | `false` | Open file paths clicked in the terminal in their OS default application when their type opens externally. Scripts stay in the editor. |
 
 ### Customizing the file types
 
 `vscode-to-explorer.fileExtensions` lists extensions without a leading dot. The
-quickest way to change it is the **Edit File Extensions** panel in the activity
-bar view; you can also edit it directly in settings. To also open SVG files in
+quickest way to change it is the **Edit File Extensions** panel, opened from the
+**Configuration Editor Nav** section of the activity bar; you can also edit it
+directly in settings. To also open SVG files in
 an external editor, for example, add `svg` to the list:
 
 ```json
@@ -138,10 +181,16 @@ platform default handler (`explorer.exe`, `open`, or `xdg-open`) and then closes
 the tab. Scripts are launched through `to-explorer`'s command runner so their
 output can be captured and displayed.
 
+For terminal links, the extension registers a terminal link provider. It
+returns links only for the URLs and files it will handle, and it checks each
+file on disk before offering a link. VS Code gives these links precedence over
+its own detection for the same text, and handles everything else as usual.
+
 ## Requirements
 
 - VS Code `1.74.0` or newer.
-- The bundled `to-explorer` dependency (installed automatically).
+- The bundled `to-explorer` dependency, version `1.1.0` or newer (installed
+  automatically).
 
 ## Development
 
@@ -152,6 +201,13 @@ npm run compile
 
 Press `F5` in VS Code to launch an Extension Development Host with the extension
 loaded.
+
+To refresh the `to-explorer` dependency to its latest published version, run
+the following before packaging a release:
+
+```bash
+npm run deps:latest
+```
 
 ## Manual Installation
 

@@ -1,7 +1,7 @@
 {
   "name": "vscode-to-explorer",
   "displayName": "to-explorer",
-  "version": "1.0.0-alpha.0.1.0",
+  "version": "1.0.0-alpha.0.2.0",
   "description": "Open files in their OS default application from the Explorer, run scripts, and open links in a chosen browser profile, powered by to-explorer.",
   "author": "John Haugabook",
   "publisher": "jhauga",
@@ -46,8 +46,23 @@
     "views": {
       "vscode-to-explorer": [
         {
-          "id": "vscode-to-explorer.configView",
-          "name": "Configuration",
+          "id": "vscode-to-explorer.mainConfigView",
+          "name": "Main Configuration",
+          "type": "webview"
+        },
+        {
+          "id": "vscode-to-explorer.browserConfigView",
+          "name": "Browser Configuration",
+          "type": "webview"
+        },
+        {
+          "id": "vscode-to-explorer.terminalConfigView",
+          "name": "Terminal Configuration",
+          "type": "webview"
+        },
+        {
+          "id": "vscode-to-explorer.editorNavView",
+          "name": "Configuration Editor Nav",
           "type": "webview"
         }
       ]
@@ -223,6 +238,21 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Browser profile used when opening URLs. Examples: `Default`, `Profile 1`, or just `2`. Leave empty to open without selecting a profile."
+        },
+        "vscode-to-explorer.terminal.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Handle Ctrl+Click on links printed in the integrated terminal through to-explorer. `#vscode-to-explorer.terminal.openWebLinksInBrowser#` and `#vscode-to-explorer.terminal.openFilesInDefaultApp#` choose which kinds of link are taken over; links that are not taken over keep VS Code's normal behavior."
+        },
+        "vscode-to-explorer.terminal.openWebLinksInBrowser": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Open `http`/`https` links clicked in the terminal in the browser and profile configured by `#vscode-to-explorer.browser.command#`, `#vscode-to-explorer.browser.useLastProfile#`, and `#vscode-to-explorer.browser.profile#` instead of VS Code's default link handling. Has no effect unless `#vscode-to-explorer.terminal.enabled#` is on."
+        },
+        "vscode-to-explorer.terminal.openFilesInDefaultApp": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Open file paths clicked in the terminal in their OS default application when their file type is listed in `#vscode-to-explorer.fileExtensions#` (or for every file when `#vscode-to-explorer.openAllFilesExternally#` is on). Scripts and other paths open in the editor as usual. Has no effect unless `#vscode-to-explorer.terminal.enabled#` is on."
         }
       }
     }
@@ -235,10 +265,11 @@
     "pretest": "tsc -p ./",
     "test": "node --test \"out/test/**/*.test.js\"",
     "pre:deploy": "npm run compile && vsce package",
-    "deploy": "vsce publish"
+    "deploy": "vsce publish",
+    "deps:latest": "npm install to-explorer@latest"
   },
   "dependencies": {
-    "to-explorer": "^1.0.1"
+    "to-explorer": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

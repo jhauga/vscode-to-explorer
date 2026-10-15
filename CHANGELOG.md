@@ -5,6 +5,43 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha.0.2.0] - 2026-10-15
+
+### Added
+
+- **Terminal links.** Ctrl+Click on a link printed in the integrated terminal
+  can now be handled by the extension. Turn on
+  `vscode-to-explorer.terminal.enabled`, then choose what it takes over:
+  - `vscode-to-explorer.terminal.openWebLinksInBrowser` (on by default) opens
+    `http`/`https` links in the configured browser and profile.
+  - `vscode-to-explorer.terminal.openFilesInDefaultApp` (off by default) opens
+    file paths in their OS default application when the file exists and its
+    type is configured to open externally. A click follows the same rules as an
+    Explorer double-click: scripts are never run, and a file whose default
+    application is VS Code, or that has none, opens in the editor (or in the
+    "open with" picker when that setting is on).
+
+  Links the extension does not claim keep VS Code's normal behavior. The
+  feature is off by default.
+- **Terminal Configuration** section in the activity bar view with the master
+  switch and its two dependent toggles.
+
+### Changed
+
+- The activity bar view is now four collapsible sections: **Main
+  Configuration**, **Browser Configuration**, **Terminal Configuration**, and
+  **Configuration Editor Nav**. Each remembers whether it is expanded. The
+  settings and buttons are the same as before, regrouped.
+- The **Main Configuration** section links to the Settings UI filtered to this
+  extension.
+- `to-explorer` dependency raised to `^1.1.0`. A new `deps:latest` script
+  refreshes it to the latest published version before a release.
+
+### Fixed
+
+- Fields in the activity bar view that only apply in certain states no longer
+  appear for a moment before hiding when the view loads.
+
 ## [1.0.0-alpha.0.1.0] - 2026-06-29
 
 ### Fixed
